@@ -58,6 +58,6 @@ export const connectSocket = (token) => {
 export const disconnectSocket = () => {
   if (socket) {
     socket.disconnect();
-    socket = null; // Clear the reference
+    socket = null;
   }
 };

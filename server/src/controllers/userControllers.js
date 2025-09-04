@@ -1,8 +1,7 @@
-const { default: mongoose } = require('mongoose');
-
 const { asyncHandler } = require('../middlewares');
 const { UserModel, PostModel } = require('../models');
 const { apiError, apiResponse } = require('../utils');
+const { cloudinary } = require('../configs');
 
 const getAllUser = asyncHandler(async (req, res, next) => {
   const users = await UserModel.find({ _id: { $ne: req.user.id } }).select(
@@ -95,7 +94,20 @@ const updateProfile = asyncHandler(async (req, res, next) => {
   user.bio = bio || user.bio;
   user.isPrivate = isPrivate !== undefined ? isPrivate : user.isPrivate;
   if (req.file) {
-    user.profilePicture = req.file.path || req.file.url;
+    const publicId = `posts/${req.file.filename}`;
+    const type = 'image';
+    const mediaObj = {
+      type,
+      url: req.file.path || file.url,
+      publicId,
+      thumbnail: '',
+    };
+    mediaObj.thumbnail = cloudinary.url(publicId, {
+      width: 300,
+      height: 300,
+      crop: 'fill',
+    });
+    user.profilePicture = mediaObj;
   }
 
   await user.save();

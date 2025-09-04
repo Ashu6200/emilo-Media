@@ -10,7 +10,7 @@ userRouter.get('/:id', authenticate, userController.getUserProfile);
 userRouter.put(
   '/update_profile',
   authenticate,
-  upload.single('image'),
+  upload.single('media'),
   userController.updateProfile
 );
 userRouter.put(
