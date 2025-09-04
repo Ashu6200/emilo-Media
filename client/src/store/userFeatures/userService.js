@@ -68,7 +68,7 @@ emiloMediaApi.injectEndpoints({
     }),
     updateYourProfileService: builder.mutation({
       query: (formData) => ({
-        url: '/user/update',
+        url: '/user/update_profile',
         method: 'PUT',
         credentials: 'include',
         body: formData,
