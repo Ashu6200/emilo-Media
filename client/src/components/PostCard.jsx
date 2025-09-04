@@ -12,6 +12,13 @@ import CommentList from './CommentList';
 import LikeList from './LikeList';
 import { Link } from 'react-router';
 import { useEffect, useRef, useState } from 'react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from './ui/carousel';
 
 const PostCard = ({ post }) => {
   const containerRef = useRef();
@@ -98,28 +105,63 @@ const PostCard = ({ post }) => {
         <p className='py-4 text-sm text-primary text-pretty'>{post.content}</p>
         {post.media?.length > 0 && (
           <div className='grid gap-2'>
-            {post.media.map((file, index) => (
-              <div
-                key={file._id || index}
-                className='rounded-2xl overflow-hidden'
-              >
-                {file.type === 'image' && (
-                  <img
-                    src={file.url}
-                    alt={`post media ${index + 1}`}
-                    className='w-full object-cover'
-                  />
-                )}
+            {post.media.length == 1 ? (
+              <>
+                {post.media.map((file, index) => (
+                  <div
+                    key={file._id || index}
+                    className='rounded-2xl overflow-hidden'
+                  >
+                    {file.type === 'image' && (
+                      <img
+                        src={file.url}
+                        alt={`post media ${index + 1}`}
+                        className='w-full object-cover'
+                      />
+                    )}
 
-                {file.type === 'video' && (
-                  <video
-                    src={file.url}
-                    controls
-                    className='w-full object-cover'
-                  />
-                )}
-              </div>
-            ))}
+                    {file.type === 'video' && (
+                      <video
+                        src={file.url}
+                        controls
+                        className='w-full object-cover'
+                      />
+                    )}
+                  </div>
+                ))}
+              </>
+            ) : (
+              <>
+                <Carousel className='w-full'>
+                  <CarouselContent>
+                    {post.media.map((file, index) => (
+                      <CarouselItem
+                        key={file._id || index}
+                        className='rounded-2xl overflow-hidden'
+                      >
+                        {file.type === 'image' && (
+                          <img
+                            src={file.url}
+                            alt={`post media ${index + 1}`}
+                            className='w-full object-cover'
+                          />
+                        )}
+
+                        {file.type === 'video' && (
+                          <video
+                            src={file.url}
+                            controls
+                            className='w-full object-cover'
+                          />
+                        )}
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className={'left-0'} />
+                  <CarouselNext className={'right-0'} />
+                </Carousel>
+              </>
+            )}
           </div>
         )}
       </CardContent>
