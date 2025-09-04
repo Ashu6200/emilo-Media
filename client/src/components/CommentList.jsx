@@ -8,7 +8,7 @@ import {
   useUpdateCommentServiceMutation,
   useUpdatedReplyServiceMutation,
 } from '../store/postFeatures/postService';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -24,6 +24,8 @@ import { Input } from './ui/input';
 import { useSelector } from 'react-redux';
 
 const CommentList = ({ children, id }) => {
+  const [open, setOpen] = useState(false);
+  const memoizedId = useMemo(() => id, [id]);
   const authStoreData = useSelector((state) => state.authStore);
   const { user } = authStoreData;
   const {
@@ -31,7 +33,9 @@ const CommentList = ({ children, id }) => {
     isLoading,
     isError,
     error,
-  } = useGetCommentListQuery(id);
+  } = useGetCommentListQuery(memoizedId, {
+    skip: !open,
+  });
 
   const [postCommentService] = usePostCommentServiceMutation();
   const [commentReplyService] = useCommentReplyServiceMutation();
@@ -176,12 +180,10 @@ const CommentList = ({ children, id }) => {
     else if (status === 500) toast.error(message || 'Server error');
     else toast.error(message || 'Unexpected error');
   };
-
-  if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error: {error.message}</div>;
 
   return (
-    <Sheet>
+    <Sheet onOpenChange={setOpen}>
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent className='h-full flex flex-col overflow-hidden'>
         <SheetHeader>
@@ -192,132 +194,139 @@ const CommentList = ({ children, id }) => {
         </SheetHeader>
 
         <div className='grid flex-1 auto-rows-min gap-6 px-4 overflow-y-auto'>
-          {commentList?.data?.map(
-            (item) =>
-              item && (
-                <div key={item._id} className='flex flex-col gap-2'>
-                  <div className='flex items-center justify-between gap-4'>
-                    <div className='min-w-0 flex items-start gap-4 justify-between'>
-                      <img
-                        src={
-                          item.user?.profilePicture.url ||
-                          '/images/authBG.jpg?height=32&width=32'
-                        }
-                        alt='User avatar'
-                        className='h-8 w-8 rounded-full ring-1 ring-zinc-200 object-cover'
-                      />
-                      <div>
-                        <h4 className='text-sm font-semibold'>
-                          {item.user.fullName || ''}
-                        </h4>
-                        <p className='text-sm text-muted-foreground'>
-                          @{item.user.username || ''}
-                        </p>
-                        <p className='text-sm text-primary text-pretty mt-2'>
-                          {item.content || ''}
-                        </p>
+          {isLoading ? (
+            <div>Loading...</div>
+          ) : (
+            commentList?.data?.map(
+              (item) =>
+                item && (
+                  <div key={item._id} className='flex flex-col gap-2'>
+                    <div className='flex items-center justify-between gap-4'>
+                      <div className='min-w-0 flex items-start gap-4 justify-between'>
+                        <img
+                          src={
+                            item.user?.profilePicture.url ||
+                            '/images/authBG.jpg?height=32&width=32'
+                          }
+                          alt='User avatar'
+                          className='h-8 w-8 rounded-full ring-1 ring-zinc-200 object-cover'
+                        />
+                        <div>
+                          <h4 className='text-sm font-semibold'>
+                            {item.user.fullName || ''}
+                          </h4>
+                          <p className='text-sm text-muted-foreground'>
+                            @{item.user.username || ''}
+                          </p>
+                          <p className='text-sm text-primary text-pretty mt-2'>
+                            {item.content || ''}
+                          </p>
+                        </div>
+                      </div>
+                      <div className='flex items-center gap-2'>
+                        <Button
+                          variant='ghost'
+                          size='icon'
+                          onClick={() =>
+                            replyHandler(item._id, item.user.fullName)
+                          }
+                        >
+                          <Reply />
+                        </Button>
+                        {user && item.user._id === user?._id && (
+                          <>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              onClick={() => {
+                                setContent(item.content);
+                                setEditMode(true);
+                                setEditTarget({
+                                  type: 'comment',
+                                  id: item._id,
+                                });
+                              }}
+                            >
+                              <Edit />
+                            </Button>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              onClick={() => deleteComment(item._id)}
+                            >
+                              <Trash />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
-                    <div className='flex items-center gap-2'>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        onClick={() =>
-                          replyHandler(item._id, item.user.fullName)
-                        }
-                      >
-                        <Reply />
-                      </Button>
-                      {user && item.user._id === user?._id && (
-                        <>
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            onClick={() => {
-                              setContent(item.content);
-                              setEditMode(true);
-                              setEditTarget({ type: 'comment', id: item._id });
-                            }}
-                          >
-                            <Edit />
-                          </Button>
-                          <Button
-                            variant='ghost'
-                            size='icon'
-                            onClick={() => deleteComment(item._id)}
-                          >
-                            <Trash />
-                          </Button>
-                        </>
-                      )}
+
+                    {/* Replies */}
+                    <div className='ml-8'>
+                      {item.replies.length > 0 &&
+                        item.replies.map(
+                          (reply) =>
+                            reply && (
+                              <div
+                                key={reply._id}
+                                className='flex items-center justify-between gap-2'
+                              >
+                                <div className='flex items-center gap-4'>
+                                  <img
+                                    src={
+                                      reply.user?.profilePicture.url ||
+                                      '/images/authBG.jpg?height=32&width=32'
+                                    }
+                                    alt='User avatar'
+                                    className='h-8 w-8 rounded-full ring-1 ring-zinc-200 object-cover'
+                                  />
+                                  <div>
+                                    <h4 className='text-sm font-semibold'>
+                                      {reply.user.fullName || ''}
+                                    </h4>
+                                    <p className='text-sm text-muted-foreground'>
+                                      @{reply.user.username || ''}
+                                    </p>
+                                    <p className='text-sm text-primary text-pretty'>
+                                      {reply.content || ''}
+                                    </p>
+                                  </div>
+                                </div>
+                                {user && reply.user._id === user._id && (
+                                  <div className='flex items-center gap-2'>
+                                    <Button
+                                      variant='ghost'
+                                      size='icon'
+                                      onClick={() => {
+                                        setContent(reply.content);
+                                        setEditMode(true);
+                                        setEditTarget({
+                                          type: 'reply',
+                                          id: reply._id,
+                                          parentId: item._id,
+                                        });
+                                      }}
+                                    >
+                                      <Edit />
+                                    </Button>
+                                    <Button
+                                      variant='ghost'
+                                      size='icon'
+                                      onClick={() =>
+                                        deleteReply(reply._id, item._id)
+                                      }
+                                    >
+                                      <Trash />
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            )
+                        )}
                     </div>
                   </div>
-
-                  {/* Replies */}
-                  <div className='ml-8'>
-                    {item.replies.length > 0 &&
-                      item.replies.map(
-                        (reply) =>
-                          reply && (
-                            <div
-                              key={reply._id}
-                              className='flex items-center justify-between gap-2'
-                            >
-                              <div className='flex items-center gap-4'>
-                                <img
-                                  src={
-                                    reply.user?.profilePicture.url ||
-                                    '/images/authBG.jpg?height=32&width=32'
-                                  }
-                                  alt='User avatar'
-                                  className='h-8 w-8 rounded-full ring-1 ring-zinc-200 object-cover'
-                                />
-                                <div>
-                                  <h4 className='text-sm font-semibold'>
-                                    {reply.user.fullName || ''}
-                                  </h4>
-                                  <p className='text-sm text-muted-foreground'>
-                                    @{reply.user.username || ''}
-                                  </p>
-                                  <p className='text-sm text-primary text-pretty'>
-                                    {reply.content || ''}
-                                  </p>
-                                </div>
-                              </div>
-                              {user && reply.user._id === user._id && (
-                                <div className='flex items-center gap-2'>
-                                  <Button
-                                    variant='ghost'
-                                    size='icon'
-                                    onClick={() => {
-                                      setContent(reply.content);
-                                      setEditMode(true);
-                                      setEditTarget({
-                                        type: 'reply',
-                                        id: reply._id,
-                                        parentId: item._id,
-                                      });
-                                    }}
-                                  >
-                                    <Edit />
-                                  </Button>
-                                  <Button
-                                    variant='ghost'
-                                    size='icon'
-                                    onClick={() =>
-                                      deleteReply(reply._id, item._id)
-                                    }
-                                  >
-                                    <Trash />
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          )
-                      )}
-                  </div>
-                </div>
-              )
+                )
+            )
           )}
         </div>
 

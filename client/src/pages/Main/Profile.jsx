@@ -32,16 +32,7 @@ const Profile = () => {
     useGetYourProfileServiceQuery();
   const { data: userPostsData, isLoading: isPostsLoading } =
     useGetPostsListServiceQuery(userId);
-  const { data: followersListData, isLoading: isFollowersLoading } =
-    useGetFollowersListServiceQuery(userId);
-  const { data: followingListData, isLoading: isFollowingLoading } =
-    useGetFollowingListServiceQuery(userId);
-  if (
-    isProfileLoading ||
-    isPostsLoading ||
-    isFollowingLoading ||
-    isFollowersLoading
-  ) {
+  if (isProfileLoading || isPostsLoading) {
     return <div>Loading...</div>;
   }
   return (
@@ -67,7 +58,8 @@ const Profile = () => {
               <div className='text-xs text-muted-foreground'>Posts</div>
             </div>
             <UserListSheet
-              userList={followersListData?.data ? followersListData.data : []}
+              queryFunction={useGetFollowersListServiceQuery}
+              userId={userId}
               title='Followers'
               description='List of user who follow you'
             >
@@ -81,7 +73,8 @@ const Profile = () => {
               </div>
             </UserListSheet>
             <UserListSheet
-              userList={followingListData?.data ? followingListData.data : []}
+              queryFunction={useGetFollowingListServiceQuery}
+              userId={userId}
               title='Following'
               description='List of user who you follow'
             >

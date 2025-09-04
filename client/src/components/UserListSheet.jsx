@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -7,9 +8,21 @@ import {
   SheetTrigger,
 } from './ui/sheet';
 
-const UserListSheet = ({ children, userList, title, description }) => {
+const UserListSheet = ({
+  children,
+  queryFunction,
+  userId,
+  title,
+  description,
+}) => {
+  const memoizedId = useMemo(() => userId, [userId]);
+  const [open, setOpen] = useState(false);
+  const { data: userList, isLoading } = queryFunction(memoizedId, {
+    skip: !open,
+  });
+
   return (
-    <Sheet>
+    <Sheet onOpenChange={setOpen}>
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent className='h-full flex flex-col overflow-hidden'>
         <SheetHeader>
@@ -17,9 +30,12 @@ const UserListSheet = ({ children, userList, title, description }) => {
           <SheetDescription>{description}</SheetDescription>
         </SheetHeader>
         <div className='grid flex-1 auto-rows-min gap-6 px-4 overflow-y-auto'>
-          {Array.isArray(userList) &&
-            userList.length > 0 &&
-            userList.map((item) => (
+          {isLoading ? (
+            <div>Loading...</div>
+          ) : (
+            Array.isArray(userList?.data) &&
+            userList.data.length > 0 &&
+            userList.data.map((item) => (
               <div key={item._id} className='flex items-center gap-4'>
                 <img
                   src={
@@ -36,7 +52,8 @@ const UserListSheet = ({ children, userList, title, description }) => {
                   </p>
                 </div>
               </div>
-            ))}
+            ))
+          )}
         </div>
       </SheetContent>
     </Sheet>
