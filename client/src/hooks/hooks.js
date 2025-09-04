@@ -32,7 +32,7 @@ export const useSocket = () => {
     socket.on('likeUpdate', ({ postId, likers }) => {
       dispatch(
         emiloMediaApi.util.updateQueryData('getAllPost', undefined, (draft) => {
-          const post = draft.find((p) => p._id === postId);
+          const post = draft.data.find((p) => p._id === postId);
           if (post) {
             post.likes = likers;
           }
@@ -42,7 +42,7 @@ export const useSocket = () => {
     socket.on('unlikeUpdate', ({ postId, likers }) => {
       dispatch(
         emiloMediaApi.util.updateQueryData('getAllPost', undefined, (draft) => {
-          const post = draft.find((p) => p._id === postId);
+          const post = draft.data.find((p) => p._id === postId);
           if (post) {
             post.likes = likers;
           }
@@ -61,9 +61,13 @@ export const useSocket = () => {
     });
     socket.on('newComment', ({ postId, comment }) => {
       dispatch(
-        emiloMediaApi.util.updateQueryData('getComments', postId, (draft) => {
-          draft.unshift(comment);
-        })
+        emiloMediaApi.util.updateQueryData(
+          'getCommentList',
+          postId,
+          (draft) => {
+            draft.data.unshift(comment);
+          }
+        )
       );
       dispatch(
         emiloMediaApi.util.invalidateTags([{ type: 'Post', id: postId }])
@@ -72,10 +76,10 @@ export const useSocket = () => {
     socket.on('newReply', ({ commentId, reply }) => {
       dispatch(
         emiloMediaApi.util.updateQueryData(
-          'getComments',
+          'getCommentList',
           reply.post,
           (draft) => {
-            const parentComment = draft.find((c) => c._id === commentId);
+            const parentComment = draft.data.find((c) => c._id === commentId);
             if (parentComment) {
               parentComment.replies = parentComment.replies || [];
               parentComment.replies.unshift(reply);

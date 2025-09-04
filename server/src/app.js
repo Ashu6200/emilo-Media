@@ -26,6 +26,14 @@ const io = new Server(appServer, {
   cors: {
     origin: config.ORIGIN.split(','),
     methods: ['GET', 'POST'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Origin',
+      'Accept',
+      'Access-Control-Allow-Origin',
+    ],
     credentials: true,
   },
 });
