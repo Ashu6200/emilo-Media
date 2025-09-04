@@ -9,11 +9,11 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import {
   useGetYourProfileServiceQuery,
-  // useUpdateYourProfileServiceMutation,
+  useUpdateYourProfileServiceMutation,
 } from '../store/userFeatures/userService';
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
-// import { toast } from 'sonner';
+import { toast } from 'sonner';
 
 const signUpSchema = yup.object().shape({
   fullName: yup.string(),
@@ -35,8 +35,8 @@ const signUpSchema = yup.object().shape({
 const EditProfile = () => {
   const { data: userData, isLoading: isUserDataLoading } =
     useGetYourProfileServiceQuery();
-  // const [updateYourProfileService, { isLoading }] =
-  //   useUpdateYourProfileServiceMutation();
+  const [updateYourProfileService, { isLoading }] =
+    useUpdateYourProfileServiceMutation();
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -80,34 +80,31 @@ const EditProfile = () => {
   };
 
   const onSubmit = async (data) => {
-    const formData = new FormData();
-    formData.append('fullName', data.fullName);
-    formData.append('bio', data.bio);
+    try {
+      const formData = new FormData();
+      formData.append('fullName', data.fullName);
+      formData.append('bio', data.bio);
 
-    if (selectedFile) {
-      formData.append('media', selectedFile);
+      if (selectedFile) {
+        formData.append('media', selectedFile);
+      }
+      const response = await updateYourProfileService(formData).unwrap();
+      if (response?.success) {
+        toast.success('Successfully updated profile', {
+          description: 'Your profile has been updated successfully',
+        });
+      }
+    } catch (err) {
+      const status = err?.status || err?.data?.statusCode;
+      const message = err?.data?.message || 'Something went wrong';
+      if (status === 400) {
+        toast.error(message || 'Invalid input');
+      } else if (status === 500) {
+        toast.error(message || 'Server error');
+      } else {
+        toast.error(message || 'Unexpected error');
+      }
     }
-    for (let pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
-    // try {
-    //   const response = await updateYourProfileService(formData).unwrap();
-    //   if (response?.success) {
-    //     toast.success('Successfully updated profile', {
-    //       description: 'Your profile has been updated successfully',
-    //     });
-    //   }
-    // } catch (err) {
-    //   const status = err?.status || err?.data?.statusCode;
-    //   const message = err?.data?.message || 'Something went wrong';
-    //   if (status === 400) {
-    //     toast.error(message || 'Invalid input');
-    //   } else if (status === 500) {
-    //     toast.error(message || 'Server error');
-    //   } else {
-    //     toast.error(message || 'Unexpected error');
-    //   }
-    // }
   };
 
   return (
@@ -200,8 +197,12 @@ const EditProfile = () => {
           />
         </div>
 
-        <Button type='submit' className='w-full' disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : 'Edit Profile'}
+        <Button
+          type='submit'
+          className='w-full'
+          disabled={isSubmitting || isLoading}
+        >
+          {isSubmitting || isLoading ? 'Saving...' : 'Edit Profile'}
         </Button>
       </div>
     </form>
