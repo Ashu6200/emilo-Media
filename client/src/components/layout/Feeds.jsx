@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import PostCard from '../PostCard';
 import { useGetAllPostQuery } from '../../store/postFeatures/postService';
 import InfiniteScroll from 'react-infinite-scroll-component';
+import PostCardSkeleton from '../Loading/PostCardSkeleton';
 
 const Feeds = () => {
   const [page, setPage] = useState(1);
@@ -28,11 +29,7 @@ const Feeds = () => {
   }, [isSuccess, paginatedData]);
 
   if (isLoading && page === 1) {
-    return (
-      <section className='flex justify-center items-center h-40'>
-        <p className='text-gray-500 animate-pulse'>Loading posts...</p>
-      </section>
-    );
+    return <PostCardSkeleton />;
   }
 
   if (isError) {

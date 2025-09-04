@@ -1,12 +1,12 @@
 import { useGetSuggestedServiceQuery } from '../store/userFeatures/userService';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router';
+import UserItemSkeleton from './Loading/UserItemSkeleton';
 
 const Suggestuser = () => {
   const authStore = useSelector((state) => state.authStore);
   const userId = authStore.user?._id;
   const { data: userList, isLoading } = useGetSuggestedServiceQuery(userId);
-  if (isLoading) return <div>Loading...</div>;
   return (
     <aside>
       <h2>Suggest User</h2>
@@ -14,9 +14,19 @@ const Suggestuser = () => {
         Explore and connect with other users on Emilo.
       </p>
       <div className='grid flex-1 auto-rows-min gap-6 py-4 overflow-y-auto'>
-        {Array.isArray(userList.data) &&
-          userList.data.length > 0 &&
-          userList.data.map((item) => <User key={item._id} user={item} />)}
+        {isLoading ? (
+          <>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <UserItemSkeleton key={i} />
+            ))}
+          </>
+        ) : (
+          <>
+            {Array.isArray(userList.data) &&
+              userList.data.length > 0 &&
+              userList.data.map((item) => <User key={item._id} user={item} />)}
+          </>
+        )}
       </div>
     </aside>
   );

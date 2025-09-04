@@ -8,6 +8,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from './ui/sheet';
+import UserItemSkeleton from './Loading/UserItemSkeleton';
 const LikeList = ({ children, id }) => {
   const [open, setOpen] = useState(false);
   const memoizedId = useMemo(() => id, [id]);
@@ -29,7 +30,11 @@ const LikeList = ({ children, id }) => {
         </SheetHeader>
         <div className='grid flex-1 auto-rows-min gap-6 px-4 overflow-y-auto'>
           {isLoading ? (
-            <div>Loading...</div>
+            <>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <UserItemSkeleton key={i} />
+              ))}
+            </>
           ) : (
             Array.isArray(likedUserList?.data) &&
             likedUserList?.data?.map((item) => (

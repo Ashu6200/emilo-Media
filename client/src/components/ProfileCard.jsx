@@ -1,9 +1,10 @@
 import { useGetYourProfileServiceQuery } from '../store/userFeatures/userService';
+import ProfileCardSkeleton from './Loading/ProfileCardSkeleton';
 
 const ProfileCard = () => {
-  const { data: profileData } = useGetYourProfileServiceQuery();
-  if (!profileData) {
-    return <div>Loading...</div>;
+  const { data: profileData, isLoading } = useGetYourProfileServiceQuery();
+  if (!profileData || isLoading) {
+    return <ProfileCardSkeleton />;
   }
   return (
     <div className='space-y-4'>

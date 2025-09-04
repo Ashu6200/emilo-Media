@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '../../components/ui/button';
 import {
   useFollowAndUnfollowUserServiceMutation,
@@ -6,12 +5,11 @@ import {
 } from '../../store/userFeatures/userService';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
+import ProfileCardSkeleton from '../../components/Loading/ProfileCardSkeleton';
 
 const Users = () => {
   const { data: userList, isLoading } = useGetAllUsersServiceQuery();
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
   return (
     <section className='mx-auto grid h-full max-w-6xl grid-cols-1 gap-4 px-4 py-4'>
       <h1 className='text-2xl font-semibold text-primary'>Users Suggestion</h1>
@@ -19,9 +17,18 @@ const Users = () => {
         Explore and connect with other users on Emilo.
       </p>
       <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
-        {userList.data.map((item) => (
-          <ProfileCard key={item._id} user={item} />
-        ))}
+        {isLoading ? (
+          <>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <ProfileCardSkeleton key={i} />
+            ))}
+          </>
+        ) : (
+          Array.isArray(userList.data) &&
+          userList.data.map((item) => (
+            <ProfileCard key={item._id} user={item} />
+          ))
+        )}
       </div>
     </section>
   );
@@ -34,7 +41,10 @@ const ProfileCard = ({ user }) => {
   const id = user._id;
   const [followAndUnfollowUserService, { isLoading }] =
     useFollowAndUnfollowUserServiceMutation();
-  let isFollower = user.isFollower;
+  const [isFollower, setIsFollower] = useState(user.isFollower);
+  useEffect(() => {
+    setIsFollower(user.isFollower);
+  }, [user.isFollower]);
   const handleFollow = async () => {
     try {
       const response = await followAndUnfollowUserService(id).unwrap();
@@ -42,7 +52,7 @@ const ProfileCard = ({ user }) => {
         toast.success('Followed successfully ', {
           description: `You have followed ${user.fullName}`,
         });
-        isFollower = !isFollower;
+        setIsFollower(!isFollower);
       }
     } catch (err) {
       const status = err?.status || err?.data?.statusCode;
