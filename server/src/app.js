@@ -37,7 +37,7 @@ const io = new Server(appServer, {
     credentials: true,
   },
 });
-
+app.set('io', io);
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(
@@ -107,19 +107,17 @@ app.use('/api/user', userRouter);
 app.use('/api/post', postRouter);
 app.use('/api/pricing', pricingRouter);
 app.use('/api/main', mainController);
-
-app.use((req, _res, next) => {
-  const error = new Error(`Not Found - ${req.originalUrl}`);
-  apiError(next, error, req, 404);
-});
 io.use((socket, next) => socketAuthenticate(socket, next));
-
 io.on('connection', (socket) => {
   console.log('User connected');
   socket.join(socket.user.id.toString());
   socket.on('disconnect', () => console.log('User disconnected'));
 });
 
+app.use((req, _res, next) => {
+  const error = new Error(`Not Found - ${req.originalUrl}`);
+  apiError(next, error, req, 404);
+});
 app.use(errorHandler);
 
-module.exports = { appServer, io };
+module.exports = { appServer };

@@ -3,7 +3,7 @@ const { asyncHandler } = require('../middlewares');
 const { apiError, apiResponse } = require('../utils');
 const { default: mongoose } = require('mongoose');
 const { cloudinary } = require('../configs');
-const { io } = require('../app');
+// const { io } = require('../app');
 
 const cities = ['Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata'];
 
@@ -215,22 +215,26 @@ const likeAndUnlikePost = asyncHandler(async (req, res, next) => {
   if (bot) {
     post.botLikes = botLikes + 1;
   }
+  const io = req.app.get('io');
+  if (!io) {
+    console.warn('⚠️ Socket.IO not found on app instance');
+  }
 
   if (isLiked) {
     post.likes = post.likes.filter((id) => id.toString() !== userId.toString());
     await post.save();
-    // io.emit('unlikeUpdate', {
-    //   postId: postId,
-    //   likers: post.likes,
-    // });
+    io.emit('unlikeUpdate', {
+      postId: postId,
+      likers: post.likes,
+    });
     return apiResponse(req, res, 200, 'Post unliked successfully', null);
   } else {
     post.likes.push(userId);
     await post.save();
-    // io.emit('likeUpdate', {
-    //   postId: postId,
-    //   likers: post.likes,
-    // });
+    io.emit('likeUpdate', {
+      postId: postId,
+      likers: post.likes,
+    });
     return apiResponse(req, res, 200, 'Post liked successfully', null);
   }
 });
@@ -259,10 +263,6 @@ const viewpost = asyncHandler(async (req, res, next) => {
   }
   post.views.push(userId);
   await post.save();
-  io.emit('viewUpdate', {
-    postId: postId,
-    views: post.views,
-  });
   return apiResponse(req, res, 200, 'Post liked successfully', null);
 });
 const getPostComments = asyncHandler(async (req, res, next) => {

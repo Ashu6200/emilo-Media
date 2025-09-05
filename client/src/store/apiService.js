@@ -47,6 +47,7 @@ export const emiloMediaApi = createApi({
   tagTypes: [
     'User',
     'Post',
+    'Like',
     'Comment',
     'Employee',
     'Pricing',

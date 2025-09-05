@@ -73,30 +73,6 @@ export const useSocket = () => {
     [dispatch]
   );
 
-  const handleViewUpdate = useCallback(
-    ({ postId, views }) => {
-      try {
-        dispatch(
-          emiloMediaApi.util.updateQueryData(
-            'getAllPost',
-            undefined,
-            (draft) => {
-              if (draft?.data) {
-                const post = draft.data.find((p) => p._id === postId);
-                if (post) {
-                  post.views = views;
-                }
-              }
-            }
-          )
-        );
-      } catch (error) {
-        console.error('Error handling view update:', error);
-      }
-    },
-    [dispatch]
-  );
-
   const handleNewComment = useCallback(
     ({ postId, comment }) => {
       try {
@@ -172,14 +148,12 @@ export const useSocket = () => {
 
     socket.on('likeUpdate', handleLikeUpdate);
     socket.on('unlikeUpdate', handleUnlikeUpdate);
-    socket.on('viewUpdate', handleViewUpdate);
     socket.on('newComment', handleNewComment);
     socket.on('newReply', handleNewReply);
     return () => {
       if (socket) {
         socket.off('likeUpdate', handleLikeUpdate);
         socket.off('unlikeUpdate', handleUnlikeUpdate);
-        socket.off('viewUpdate', handleViewUpdate);
         socket.off('newComment', handleNewComment);
         socket.off('newReply', handleNewReply);
       }
@@ -189,7 +163,6 @@ export const useSocket = () => {
     isAuthenticated,
     handleLikeUpdate,
     handleUnlikeUpdate,
-    handleViewUpdate,
     handleNewComment,
     handleNewReply,
   ]);

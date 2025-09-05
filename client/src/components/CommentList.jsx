@@ -23,7 +23,7 @@ import { CircleX, Edit, Reply, Send, Trash } from 'lucide-react';
 import { Input } from './ui/input';
 import { useSelector } from 'react-redux';
 
-const CommentList = ({ children, id }) => {
+const CommentList = ({ children, id, setCommentsLength, commentsLength }) => {
   const [open, setOpen] = useState(false);
   const memoizedId = useMemo(() => id, [id]);
   const authStoreData = useSelector((state) => state.authStore);
@@ -69,6 +69,9 @@ const CommentList = ({ children, id }) => {
         postId: id,
         commentId,
       }).unwrap();
+      if (response?.success) {
+        setCommentsLength(commentsLength - 1);
+      }
       if (response?.success) toast.success('Comment deleted successfully');
     } catch (err) {
       handleError(err);
@@ -96,6 +99,7 @@ const CommentList = ({ children, id }) => {
         content,
       }).unwrap();
       if (response?.success) {
+        setCommentsLength(commentsLength + 1);
         toast.success('Comment updated successfully');
         resetState();
       }

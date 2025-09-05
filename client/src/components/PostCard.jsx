@@ -19,11 +19,27 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from './ui/carousel';
+import { useSelector } from 'react-redux';
 
 const PostCard = ({ post }) => {
   const containerRef = useRef();
+  const authStoreData = useSelector((state) => state.authStore);
+  const { user } = authStoreData;
   const [hasBeenViewed, setHasBeenViewed] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesLength, setLikesLength] = useState(post.likes.length);
+  const [commentsLength, setCommentsLength] = useState(post.comments.length);
   const [viewPostService] = useViewPostServiceMutation();
+  useEffect(() => {
+    setLikesLength(post.likes.length);
+    setCommentsLength(post.comments.length);
+    if (post.likes.includes(user._id)) {
+      setIsLiked(true);
+    } else {
+      setIsLiked(false);
+    }
+  }, [post.comments.length, post.likes, user._id]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       async (entries) => {
@@ -60,7 +76,15 @@ const PostCard = ({ post }) => {
   const [likeAndUnlikePostService] = useLikeAndUnlikePostServiceMutation();
   const likeAndUnlikeHanlder = async () => {
     try {
-      await likeAndUnlikePostService(post._id).unwrap();
+      const response = await likeAndUnlikePostService(post._id).unwrap();
+      if (response.success && response.statusCode === 200) {
+        setIsLiked(!isLiked);
+        if (isLiked) {
+          setLikesLength(likesLength - 1);
+        } else {
+          setLikesLength(likesLength + 1);
+        }
+      }
     } catch (err) {
       console.log(err);
       const status = err?.status || err?.data?.statusCode;
@@ -167,18 +191,27 @@ const PostCard = ({ post }) => {
       </CardContent>
       <CardFooter className='flex items-center gap-6 pt-4'>
         <div className='flex items-center gap-1'>
-          <Heart size={18} onClick={likeAndUnlikeHanlder} />
+          <Heart
+            size={18}
+            onClick={likeAndUnlikeHanlder}
+            color={isLiked ? 'red' : 'black'}
+            fill={isLiked ? 'red' : 'white'}
+          />
           <LikeList id={post._id}>
             <Button variant='ghost' size='sm'>
-              {post.likes.length > 0 ? post.likes.length : ''} Like
+              {likesLength > 0 ? likesLength : ''} Like
             </Button>
           </LikeList>
         </div>
-        <CommentList id={post._id}>
+        <CommentList
+          id={post._id}
+          setCommentsLength={setCommentsLength}
+          commentsLength={commentsLength}
+        >
           <div className='flex items-center gap-1'>
             <Button variant='ghost' size='sm'>
               <MessageCircle size={18} />
-              {post.comments.length > 0 ? post.comments.length : ''} Comment
+              {commentsLength > 0 ? commentsLength : ''} Comment
             </Button>
           </div>
         </CommentList>
