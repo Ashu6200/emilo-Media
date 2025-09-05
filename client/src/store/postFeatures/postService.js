@@ -122,13 +122,7 @@ emiloMediaApi.injectEndpoints({
         };
       },
       invalidatesTags: (result, error, postId) => {
-        console.log('🔄 invalidatesTags called:');
-        console.log('  - result:', result);
-        console.log('  - error:', error);
-        console.log('  - postId:', postId);
-
         if (error) {
-          console.log('❌ Error occurred, no tags invalidated');
           return [];
         }
 
@@ -138,12 +132,9 @@ emiloMediaApi.injectEndpoints({
           { type: 'Like', id: postId },
           { type: 'Like', id: 'LIST' },
         ];
-
-        console.log('🏷️ Invalidating tags:', tagsToInvalidate);
         return tagsToInvalidate;
       },
       async onQueryStarted(postId, { queryFulfilled, dispatch, getState }) {
-        console.log('🚀 Like/Unlike onQueryStarted for postId:', postId);
         const patchResult = dispatch(
           emiloMediaApi.util.updateQueryData(
             'getAllPost',
@@ -152,10 +143,6 @@ emiloMediaApi.injectEndpoints({
               const post = draft.data?.find((p) => p._id === postId);
               console.log('🔍 Found post:', post);
               if (post) {
-                console.log(
-                  '🔄 Optimistic update - current likes:',
-                  post.likes?.length || 0
-                );
                 const currentUserId = getState().auth?.user?._id;
 
                 if (currentUserId) {
@@ -167,7 +154,6 @@ emiloMediaApi.injectEndpoints({
                     );
                     post.likesCount =
                       (post.likesCount || post.likes.length) - 1;
-                    console.log('👎 Optimistically removed like');
                   } else {
                     post.likes = post.likes || [];
                     if (!post.likes.includes(currentUserId)) {
@@ -175,10 +161,7 @@ emiloMediaApi.injectEndpoints({
                     }
                     post.likesCount =
                       (post.likesCount || post.likes.length - 1) + 1;
-                    console.log('👍 Optimistically added like');
                   }
-
-                  console.log('🔄 New likes count:', post.likesCount);
                 }
               }
             }
@@ -186,13 +169,8 @@ emiloMediaApi.injectEndpoints({
         );
 
         try {
-          console.log('⏳ Waiting for like/unlike request to complete...');
           const { data: response } = await queryFulfilled;
-
-          console.log('📨 Like/Unlike response:', response);
-
           if (!response?.success) {
-            console.error('❌ Like/Unlike failed:', response?.message);
             throw new Error(
               response?.message || 'Like/Unlike operation failed'
             );
@@ -200,12 +178,7 @@ emiloMediaApi.injectEndpoints({
 
           console.log('✅ Like/Unlike completed successfully');
         } catch (error) {
-          console.error('💥 Like/Unlike error:', error);
-
-          // Revert optimistic update on error
           patchResult.undo();
-          console.log('🔄 Reverted optimistic update due to error');
-
           throw error;
         }
       },
